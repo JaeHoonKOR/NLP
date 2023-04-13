@@ -53,33 +53,10 @@ def TFIDF(doc_tokens, id_to_word):
 
 
 docs = []
-docs.append('Python is a high-level, general-purpose programming language.')
-docs.append(
-  'Its design philosophy emphasizes code readability with the use of significant indentation.'
-)
-docs.append(
-  'Its language constructs and object-oriented approach aim to help programmers write clear, logical code for small- and large-scale projects.'
-)
-docs.append('Python is dynamically-typed and garbage-collected.')
-docs.append(
-  'It supports multiple programming paradigms, including structured (particularly procedural), object-oriented and functional programming.'
-)
-docs.append(
-  'It is often described as a "batteries included" language due to its comprehensive standard library.'
-)
-docs.append(
-  'Guido van Rossum began working on Python in the late 1980s as a successor to the ABC programming language and first released it in 1991 as Python 0.9.0.'
-)
-docs.append(
-  'Python 2.0 was released in 2000 and introduced new features such as list comprehensions, cycle-detecting garbage collection, reference counting, and Unicode support.'
-)
-docs.append(
-  'Python 3.0, released in 2008, was a major revision that is not completely backward-compatible with earlier versions.'
-)
-docs.append('Python 2 was discontinued with version 2.7.18 in 2020.')
-docs.append(
-  'Python consistently ranks as one of the most popular programming languages.'
-)
+docs.append('To do is to be. To be is to do.')
+docs.append('To be or not to be. I am what I am')
+docs.append('I think therefore I am. Do be do be do.')
+docs.append('Do do do da da da. Let it be let it be.')
 
 doc_tokens, vocab, word_to_id, id_to_word = buildDict(docs)
 tf_vectors, idf, tfidf = TFIDF(doc_tokens, id_to_word)
@@ -100,6 +77,27 @@ from numpy.linalg import norm
 
 tfidf_l2 = np.array([np.divide(vec, norm(vec)) for vec in tfidf])  #l2 norm
 pd.DataFrame(tfidf_l2, columns=word_to_id.keys())
+"""코사인 유사도 계산 - 1. 질의어 순위계산"""
+
+user = input('질의어 입력')
+delim = re.compile(r'[\s,.]+')
+tokens = delim.split(user.lower())
+if tokens[-1] == '': tokens = tokens[:-1]
+tokens
+
+user_vector = np.array([0.0 for _ in vocab])
+for token in tokens:
+  if token in word_to_id:
+    user_vector[word_to_id[token]] = idf[word_to_id[token]]
+user_vector = np.array([np.divide(user_vector, norm(user_vector))])  #l2 norm
+user_vector
+
+pd.DataFrame(tfidf_l2, columns=word_to_id.keys())
+
+user_rank = [user_vector.dot(vec) for vec in tfidf_l2]
+user_rank
+#print(user_rank)
+#이 점수는 사용자가 입력한 질의어와 각 문서의 유사도를 나타내며, 점수가 높을수록 해당 문서가 입력한 질의어와 유사
 """코사인 유사도 계산 - 2. 문서 간 유사도 계산"""
 
 cos_sim = np.array([np.dot(tfidf_l2, vector) for vector in tfidf_l2])
@@ -108,7 +106,3 @@ print(cos_sim)
 # 행렬의 각 원소는 해당하는 두 문서 간의 유사도를 나타냅니다. 예를 들어, (1,2) 위치의 값은 첫 번째 문서와 두 번째 문서 간의 유사도를 나타냅니다.
 
 #이 1로 표시된 것은 각 문서 자체와의 유사도입니다. 예를 들어, 첫 번째 문서와 첫 번째 문서는 완전히 동일하므로 자기 자신과의 유사도는 1입니다. 따라서 대각선 상에 위치한 값들이 모두 1
-for i in range(len(docs)):
-  for j in range(i + 1, len(docs)):
-    cos_sim_val = cos_sim[i][j]
-    print(f"{i+1}번째 문서와 {j+1}번째 문서의 유사도: {cos_sim_val:.4f}")
